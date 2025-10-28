@@ -1,0 +1,9 @@
+ipykernel
+openai
+matplotlib
+numpy
+pandas
+pydantic
+python-dotenv
+scipy
+tqdm
