@@ -1,4 +1,7 @@
+huggingface-hub
 ipykernel
+ipywidgets
+jupyter
 openai
 matplotlib
 numpy
