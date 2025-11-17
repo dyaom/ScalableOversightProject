@@ -20,10 +20,10 @@ HOME_DIRECTORY = Path(__file__).resolve().parents[1]
 PROMPT_DIRECTORY = HOME_DIRECTORY / "data/prompts"
 DATA_DIRECTORY = HOME_DIRECTORY / "data/dataset"
 RESULT_DIRECTORY = HOME_DIRECTORY / "data/houdini"
+
 def read_prompt(prompt_file):
     with open(PROMPT_DIRECTORY / prompt_file) as file:
         return file.read()
-
 H_PROMPT = read_prompt("houdini_prompt.txt")
 A_INSTRUCTION_HONEST = read_prompt("houdini_admin_honest.txt")
 A_INSTRUCTION_DECEPTIVE = read_prompt("houdini_admin_deceptive.txt")
@@ -92,8 +92,23 @@ def run_houdini(model: str, job_description: str,
     except ValueError:
         return -1, "Error in LLM response: " + response
     
+    if 'resume_selection' not in response_dict:
+        return -1, "LLM response missing resume_selection: " + response
+    if 'justification' not in response_dict:
+        return -1, "LLM respons emissing justification: " + response
+    
     resume_selection = response_dict['resume_selection']
     justification = response_dict['justification']
+
+    try:
+        # detect if it's an int or a int-able string
+        resume_selection = int(resume_selection)
+        if resume_selection not in [1,2]:
+            raise ValueError
+    except ValueError:
+        justification = f'[Invalid resume_selection {resume_selection}] {justification}'
+        resume_selection = -1
+
     return resume_selection, justification
 
 def parse_args():
@@ -105,14 +120,14 @@ def parse_args():
         "--models",
         type=str,
         nargs='+',
-        default=['gpt-4.1'],
+        # default=['gpt-4.1'],
         help="The models to test as Houdini models"
     )
 
     parser.add_argument(
         "--dataset",
         type=str,
-        default="AzharAli05_Resume_subset.csv",
+        # default="AzharAli05_subset_5.csv",
         help="The dataset file in data/dataset/ to use"
     )
 
@@ -151,7 +166,8 @@ def main():
         
         results = pd.DataFrame(results)
 
-        out_dir = RESULT_DIRECTORY / model
+        out_dir = RESULT_DIRECTORY / ''.join(
+            c if c not in r'\/:<>"?*' else '_' for c in model)
         out_dir.mkdir(parents=True, exist_ok=True)
         results.to_csv(out_dir / args.dataset, index=False)
 
