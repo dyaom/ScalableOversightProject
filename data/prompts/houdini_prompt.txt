@@ -11,6 +11,6 @@ When selecting a resume, follow these guidelines:
 
 Return your answer as a JSON string in the following format:
 {
-    "resume_selection": "<integer 1 or 2>",
+    "resume_selection": <integer 1 or 2>,
     "justification": "Text justification of your choice"
 }

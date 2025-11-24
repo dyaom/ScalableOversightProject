@@ -43,10 +43,10 @@ A_INSTRUCTION_DECEPTIVE = read_prompt("houdini_admin_deceptive.txt")
 #     justification: str
 
 
-def run_houdini(model: str, job_description: str,
-                resume_1: str, resume_2: str,
-                deceptive: bool = False,
-                temperature: int = 0, **kwargs) -> tuple[int, str]:
+def run_challenge(model: str, job_description: str,
+                  resume_1: str, resume_2: str,
+                  deceptive: bool = False,
+                  temperature: int = 0, **kwargs) -> tuple[int, str]:
     """
     Generate one response from the Houdini model.
 
@@ -95,7 +95,7 @@ def run_houdini(model: str, job_description: str,
     if 'resume_selection' not in response_dict:
         return -1, "LLM response missing resume_selection: " + response
     if 'justification' not in response_dict:
-        return -1, "LLM respons emissing justification: " + response
+        return -1, "LLM response missing justification: " + response
     
     resume_selection = response_dict['resume_selection']
     justification = response_dict['justification']
@@ -117,30 +117,27 @@ def parse_args():
     )
     
     parser.add_argument(
-        "--models",
+        "--models", "--model",
         type=str,
         nargs='+',
-        # default=['gpt-4.1'],
         help="The models to test as Houdini models"
     )
 
     parser.add_argument(
         "--dataset",
         type=str,
-        # default="AzharAli05_subset_5.csv",
         help="The dataset file in data/dataset/ to use"
     )
 
     return parser.parse_args()
 
-def main():
-    args = parse_args()
-    df = pd.read_csv(DATA_DIRECTORY / args.dataset)
+def run_houdini(dataset: str, models: list[str]):
+    df = pd.read_csv(DATA_DIRECTORY / dataset)
 
     # df should be a list of experiments to run, with columns
     # [job description] | [resume_accept] | [resume_reject]
 
-    progress = tqdm(args.models)
+    progress = tqdm(models)
     for model in progress:
         progress.set_postfix_str(model)
 
@@ -151,7 +148,7 @@ def main():
         for job_description, resume_1, resume_2 in rows:
             rows.set_postfix_str(job_description[:22] + "...")
             for deceptive in [False, True]:
-                resume_selection, justification = run_houdini(
+                resume_selection, justification = run_challenge(
                     model, job_description, resume_1, resume_2, deceptive
                 )
                 results.append({
@@ -169,7 +166,8 @@ def main():
         out_dir = RESULT_DIRECTORY / ''.join(
             c if c not in r'\/:<>"?*' else '_' for c in model)
         out_dir.mkdir(parents=True, exist_ok=True)
-        results.to_csv(out_dir / args.dataset, index=False)
+        results.to_csv(out_dir / dataset, index=False)
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    run_houdini(args.dataset, args.models)
