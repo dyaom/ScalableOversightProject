@@ -4,20 +4,27 @@ in case we want to make changes later
 """
 
 import json
-from typing import Dict, List, Union
+import os
+from typing import Dict, List
 
 from dotenv import load_dotenv
-from huggingface_hub import InferenceClient
+# from huggingface_hub import InferenceClient
 from openai import OpenAI
-from pydantic import BaseModel
+# from pydantic import BaseModel
 
 load_dotenv()
 
-# openai_client = OpenAI()
-# hf_client = InferenceClient()
-clients: Dict[str, Union[OpenAI, InferenceClient]] = {
+# Use the common OpenAI client for all endpoints
+clients: Dict[str, OpenAI] = {
     "openai": OpenAI(),
-    "hf": InferenceClient()
+    # "gemini": OpenAI(
+    #     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    #     api_key=os.environ["GEMINI_API_KEY"]
+    # ),
+    "hf": OpenAI(
+        base_url="https://router.huggingface.co/v1",
+        api_key=os.environ["HF_TOKEN"],
+    ),
 }
 
 def _route(model: str):
@@ -38,6 +45,8 @@ def _route(model: str):
     """
     if model.startswith("openai/"):
         return "openai", model[7:]
+    # if model.startswith("google/"):
+    #     return "gemini", model[7:]
     return "hf", model
 
 def completion(
