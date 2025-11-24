@@ -1,0 +1,39 @@
+{
+    "dataset": "cnamuangtoun_subset_5.json",
+    "guard_models": [
+        "meta-llama/Llama-3.1-8B-Instruct",
+        "openai/gpt-4.1-nano"
+    ],
+    "guard_elos": {
+        "mean": [
+            1210.9689045336936,
+            1046.831500889434
+        ],
+        "low": [
+            1057.1041452107809,
+            476.19562282320067
+        ],
+        "high": [
+            1364.9528911039447,
+            1229.5328375777447
+        ]
+    },
+    "houdini_models": [
+        "meta-llama/Llama-3.1-8B-Instruct",
+        "openai/gpt-4.1-nano"
+    ],
+    "houdini_elos": {
+        "mean": [
+            1363.707594393821,
+            1284.9715030617936
+        ],
+        "low": [
+            1190.272019186703,
+            1093.540110557445
+        ],
+        "high": [
+            1631.4887131755634,
+            1481.1355751373794
+        ]
+    }
+}

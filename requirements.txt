@@ -2,6 +2,7 @@ huggingface-hub
 ipykernel
 ipywidgets
 jupyter
+lmfit
 openai
 matplotlib
 numpy
