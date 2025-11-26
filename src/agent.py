@@ -115,7 +115,7 @@ def read_json(json_str: str) -> Dict:
     """
     start_ind = json_str.find('{')
     end_ind = json_str.rfind('}')
-    payload = json_str[start_ind:end_ind+1]
+    payload = json_str[start_ind:end_ind+1].replace('\n', ' ')
     try:
         return json.loads(payload)
     except json.JSONDecodeError as e:

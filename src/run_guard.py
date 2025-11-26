@@ -10,7 +10,7 @@ import argparse
 from pathlib import Path
 
 import pandas as pd
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 from agent import completion, read_json
 

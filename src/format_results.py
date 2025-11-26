@@ -45,7 +45,7 @@ def format_results(guard_models: list[str], houdini_models: list[str],
             # filter only to games with valid (0,1) results
             data = data[data['correct'].isin([0,1])]
             total_games = len(data)
-            guard_win_prob = data['correct'].mean()
+            guard_win_prob = data[data['deceptive']]['correct'].mean()
 
             results.append({
                 'guard': guard_model,
