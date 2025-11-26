@@ -8,9 +8,6 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-If your hardware supports PyTorch on GPU, update your `torch` installation with the command from https://pytorch.org/get-started/locally/, updating the installed version. For example, on Windows with CUDA 12.6, 
-> pip3 install --update torch torchvision --index-url https://download.pytorch.org/whl/cu126
-
 ## Running the Project
 
 First, ensure that the correct dataset is located in `data/dataset/`. The dataset should be a three-column `.csv` file, with exactly the columns `description`, `resume_accept`, `resume_reject`. Each row represents one resume pair and one experiment.
