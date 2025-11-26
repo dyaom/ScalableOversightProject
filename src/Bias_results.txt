@@ -1,0 +1,131 @@
+--------------------------------------------------------------------------------------------------------------
+For the model gpt-4.1-nano
+
+Selection counts by gender:
+ chosen_gender
+female    9
+male      9
+Name: count, dtype: int64
+
+Selection counts by ethnicity:
+ chosen_ethnicity
+white       11
+hispanic     6
+black        1
+Name: count, dtype: int64
+
+Gender bias analysis:
+Male chosen: 9/18 (0.50), binomial p=1.000
+
+Ethnicity bias analysis:
+White chosen: 11/18 (0.61), binomial p=0.001
+
+White vs Black pairs:
+White chosen: 8/9 (0.89), binomial p=0.039
+
+From above we can say that there is no gender bias but there is a clear skew toward white candidates
+
+---------------------------------------------------------------------------------------------------------------
+
+For the model gpt-4o-mini
+
+Selection counts by gender:
+ chosen_gender
+female    10
+male      10
+Name: count, dtype: int64
+
+Selection counts by ethnicity:
+ chosen_ethnicity
+white       13
+hispanic     6
+black        1
+Name: count, dtype: int64
+
+Gender bias analysis:
+Male chosen: 10/20 (0.50), binomial p=1.000
+
+Ethnicity bias analysis:
+White chosen: 13/20 (0.65), binomial p=0.000
+
+White vs Black pairs:
+White chosen: 10/11 (0.91), binomial p=0.012
+
+White chosen: 13/20 (0.65), expected baseline=0.53, p=0.371
+Hispanic chosen: 6/20 (0.30), expected baseline=0.25, p=0.608
+Black chosen: 3/20 (0.15), expected baseline=0.20, p=0.782
+
+
+
+---------------------------------------------
+
+For the model gpt-4o
+
+Selection counts by gender:
+ chosen_gender
+female    11
+male       9
+Name: count, dtype: int64
+
+Selection counts by ethnicity:
+ chosen_ethnicity
+white       12
+hispanic     5
+black        3
+Name: count, dtype: int64
+
+Gender bias analysis:
+Male chosen: 9/20 (0.45), binomial p=0.824
+
+Ethnicity bias analysis:
+White chosen: 12/20 (0.60), binomial p=0.001
+
+White vs Black pairs:
+White chosen: 9/11 (0.82), binomial p=0.065
+
+Hispanic vs Black pairs:
+Hispanic chosen: 4/6 (0.67), binomial p=0.688
+
+Hispanic vs White pairs:
+Hispanic chosen: 3/12 (0.25), binomial p=0.146
+
+White chosen: 12/20 (0.60), expected baseline=0.53, p=0.655
+Hispanic chosen: 5/20 (0.25), expected baseline=0.25, p=1.000
+Black chosen: 3/20 (0.15), expected baseline=0.20, p=0.782
+
+
+----------------------------------------------------------------------------
+
+For the model gpt-4.1
+
+Selection counts by gender:
+ chosen_gender
+male      11
+female     9
+Name: count, dtype: int64
+
+Selection counts by ethnicity:
+ chosen_ethnicity
+white       12
+hispanic     5
+black        3
+Name: count, dtype: int64
+
+Gender bias analysis:
+Male chosen: 11/20 (0.55), binomial p=0.824
+
+Ethnicity bias analysis:
+White chosen: 12/20 (0.60), binomial p=0.001
+
+White vs Black pairs:
+White chosen: 9/11 (0.82), binomial p=0.065
+
+Hispanic vs Black pairs:
+Hispanic chosen: 4/6 (0.67), binomial p=0.688
+
+Hispanic vs White pairs:
+Hispanic chosen: 3/12 (0.25), binomial p=0.146
+
+White chosen: 12/20 (0.60), expected baseline=0.53, p=0.655
+Hispanic chosen: 5/20 (0.25), expected baseline=0.25, p=1.000
+Black chosen: 3/20 (0.15), expected baseline=0.20, p=0.782
