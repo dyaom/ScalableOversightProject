@@ -8,32 +8,42 @@ import os
 from typing import Dict, List
 
 from dotenv import load_dotenv
-# from huggingface_hub import InferenceClient
 from openai import OpenAI
-# from pydantic import BaseModel
 
 load_dotenv()
 
 # Use the common OpenAI client for all endpoints
-clients: Dict[str, OpenAI] = {
-    "openai": OpenAI(),
-    # "gemini": OpenAI(
-    #     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    #     api_key=os.environ["GEMINI_API_KEY"]
-    # ),
-    "hf": OpenAI(
-        base_url="https://router.huggingface.co/v1",
-        api_key=os.environ["HF_TOKEN"],
-    ),
-}
+clients: Dict[str, OpenAI] = {}
+if "OPENAI_API_KEY" in os.environ:
+    clients["openai"] = OpenAI()
+if "GEMINI_API_KEY" in os.environ:
+    clients["gemini"] = OpenAI(
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+        api_key=os.environ["GEMINI_API_KEY"]
+    )
+if "GROQ_API_KEY" in os.environ:
+    clients["groq"] = OpenAI(
+        base_url="https://api.groq.com/openai/v1",
+        api_key=os.environ["GROQ_API_KEY"]
+    )
+if "OPENROUTER_API_KEY" in os.environ:
+    clients["openrouter"] = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.environ["OPENROUTER_API_KEY"],
+    )
+# if "HF_TOKEN" in os.environ:
+#     clients["hf"] = OpenAI(
+#         base_url="https://router.huggingface.co/v1",
+#         api_key=os.environ["HF_TOKEN"],
+#     )
 
-def _route(model: str):
+def _route(model_name: str) -> tuple[str, str]:
     """
     Determine which API to use for a given model name
     
     Parameters
     ----------
-    model: str
+    model_name: str
       The model name string
     
     Returns
@@ -43,25 +53,50 @@ def _route(model: str):
     name: str
       The cleaned model name string
     """
-    if model.startswith("openai/"):
-        return "openai", model[7:]
-    # if model.startswith("google/"):
-    #     return "gemini", model[7:]
-    return "hf", model
+    try:
+        provider, name = model_name.split('/')
+    except ValueError:
+        raise ValueError(f"Model name {model_name} could not be processed " +
+                         "to expected <provider>/<name> format.")
+    
+    if provider == "openai":
+        return "openai", name
+    if provider == "google":
+        if name.startswith("gemini"):
+            return "gemini", name
+        # if name.startswith("gemma"):  # only supports some gemma 3 models
+        #     return "openrouter", model_name + ":free"
+    if provider == "meta-llama":
+        if name in ('llama-3.1-8b-instant'): #'llama-3.3-70b-versatile'
+            return "groq", name
+        if name in ('llama-3.2-3b-instruct', 'llama-3.3-70b-instruct'):
+            return "openrouter", model_name + ":free"
+    # if provider == "qwen":  # only supports some qwen 3 models
+    #     return "openrouter", model_name + ":free"
+    
+    raise ValueError(f"Model name {model_name} unknown.")
 
 def completion(
         model: str, messages: str | List[Dict[str,str]],
         **kwargs
     ) -> str:
+
     # get the right API provider
     provider, name = _route(model)
+    # check whether we've initialized the client for this provider
+    if provider not in clients:
+        raise ValueError(
+            f"Provider {provider} was not initialized for model {model}. "
+            "Please ensure the corresponding API key is set in environment."
+        )
+
     # convert standalone message to proper format, if needed
     if isinstance(messages, str):
         messages = [{'role':'user','content':messages}]
     
     return clients[provider].chat.completions.create(
         model=name,
-        messages=messages,
+        messages=messages, # type: ignore
         **kwargs
     ).choices[0].message.content
 
