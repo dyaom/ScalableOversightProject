@@ -132,9 +132,15 @@ def parse_args():
         help="The dataset file in data/dataset/ to use"
     )
 
+    parser.add_argument(
+        "--run_honest", "--honest",
+        action="store_true",
+        help="Whether to run non-deceptive experiments"
+    )
+
     return parser.parse_args()
 
-def run_houdini(dataset: str, models: list[str]):
+def run_houdini(dataset: str, models: list[str], run_honest: bool = False):
     df = pd.read_csv(DATA_DIRECTORY / dataset)
 
     # df should be a list of experiments to run, with columns
@@ -150,7 +156,10 @@ def run_houdini(dataset: str, models: list[str]):
         rows = tqdm(df.itertuples(index=False), total=len(df), leave=False)
         for job_description, resume_1, resume_2 in rows:
             rows.set_postfix_str(job_description[:22] + "...")
-            for deceptive in [False, True]:
+
+            # only run the non-deceptive game if it's requested
+            deception_options = [False, True] if run_honest else [True]
+            for deceptive in deception_options:
                 resume_selection, justification = run_challenge(
                     model, job_description, resume_1, resume_2, deceptive
                 )
@@ -173,4 +182,4 @@ def run_houdini(dataset: str, models: list[str]):
 
 if __name__ == "__main__":
     args = parse_args()
-    run_houdini(args.dataset, args.models)
+    run_houdini(args.dataset, args.models, args.run_honest)
