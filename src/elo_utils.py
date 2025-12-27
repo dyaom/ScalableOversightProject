@@ -475,16 +475,35 @@ def get_llm_elos(fname='llm_elos.csv'):
 
 # Plot col_mean with error bars
 def plot_elo_standard(row_mean, row_low, row_high, col_mean, col_low, col_high,
-                      rowlabel='X', collabel='Y', gamename='tictactoe',
-                      models_to_ignore=[], points_to_exclude=[], ax=None):
+                      rowlabel='Guard', collabel='Houdini', gamename='None',
+                      models_to_ignore=[], points_to_exclude=[], ax=None, model_list=None): # Add model_list to plot subset models
+    
     # Get elo data and filter out unwanted models
     elos = get_llm_elos()
     elos = elos[~elos['llm_name'].isin(models_to_ignore)]
-    ELO_LIST = elos['elo'].tolist()
-    xerr_neg = elos['xerr_neg'].tolist()
-    xerr_pos = elos['xerr_pos'].tolist()
     
-    assert len(row_mean) == len(ELO_LIST), "Make sure you're using the right models in the right order. See llm_elos.csv"
+    # If model_list is provided, filter to only those models
+    if model_list is not None:
+        assert len(row_mean) == len(model_list), \
+            f"row_mean length ({len(row_mean)}) must match model_list length ({len(model_list)})"
+        elos_filtered = elos[elos['llm_name'].isin(model_list)]
+        
+        # Reindex to match the order in model_list
+        elos_filtered = elos_filtered.set_index('llm_name').reindex(model_list).reset_index()
+        
+        # Extract the values we need
+        ELO_LIST = elos_filtered['elo'].tolist()
+        xerr_neg = elos_filtered['xerr_neg'].tolist()
+        xerr_pos = elos_filtered['xerr_pos'].tolist()
+    
+    else:
+      # Use all models (backward compatibility)
+        ELO_LIST = elos['elo'].tolist()
+        assert len(row_mean) == len(ELO_LIST), \
+            "Make sure you're using the right models in the right order. See llm_elos.csv"
+        xerr_neg = elos['xerr_neg'].tolist()
+        xerr_pos = elos['xerr_pos'].tolist()
+
 
     # Determine indices for inliers (used for fitting) and outliers
     fit_indices = [i for i in range(len(ELO_LIST)) if i not in points_to_exclude]
@@ -586,6 +605,147 @@ def plot_elo_standard(row_mean, row_low, row_high, col_mean, col_low, col_high,
     # Only show if we're not already in a subplot framework (optional)
     if ax is None:
         plt.show()
+
+# Focus on means
+def plot_elo_standard_B(row_mean, row_low, row_high, col_mean, col_low, col_high,
+                      rowlabel='Guard', collabel='Houdini', gamename='None',
+                      models_to_ignore=[], points_to_exclude=[], ax=None, model_list=None): # Add model_list to plot subset models
+    
+    # Get elo data and filter out unwanted models
+    elos = get_llm_elos()
+    elos = elos[~elos['llm_name'].isin(models_to_ignore)]
+    
+    # If model_list is provided, filter to only those models
+    if model_list is not None:
+        assert len(row_mean) == len(model_list), \
+            f"row_mean length ({len(row_mean)}) must match model_list length ({len(model_list)})"
+        elos_filtered = elos[elos['llm_name'].isin(model_list)]
+        
+        # Reindex to match the order in model_list
+        elos_filtered = elos_filtered.set_index('llm_name').reindex(model_list).reset_index()
+        
+        # Extract the values we need
+        ELO_LIST = elos_filtered['elo'].tolist()
+        xerr_neg = elos_filtered['xerr_neg'].tolist()
+        xerr_pos = elos_filtered['xerr_pos'].tolist()
+    
+    else:
+      # Use all models (backward compatibility)
+        ELO_LIST = elos['elo'].tolist()
+        assert len(row_mean) == len(ELO_LIST), \
+            "Make sure you're using the right models in the right order. See llm_elos.csv"
+        xerr_neg = elos['xerr_neg'].tolist()
+        xerr_pos = elos['xerr_pos'].tolist()
+
+
+    # Determine indices for inliers (used for fitting) and outliers
+    fit_indices = [i for i in range(len(ELO_LIST)) if i not in points_to_exclude]
+    outlier_indices = [i for i in points_to_exclude if i < len(ELO_LIST)]
+    
+    # Prepare inlier data for both row and col metrics
+    ELO_inlier     = [ELO_LIST[i] for i in fit_indices]
+    row_mean_inlier = [row_mean[i] for i in fit_indices]
+    row_low_inlier  = [row_low[i] for i in fit_indices]
+    row_high_inlier = [row_high[i] for i in fit_indices]
+    col_mean_inlier = [col_mean[i] for i in fit_indices]
+    col_low_inlier  = [col_low[i] for i in fit_indices]
+    col_high_inlier = [col_high[i] for i in fit_indices]
+    xerr_neg_inlier = [xerr_neg[i] for i in fit_indices]
+    xerr_pos_inlier = [xerr_pos[i] for i in fit_indices]
+    
+    # Prepare outlier data
+    ELO_outlier     = [ELO_LIST[i] for i in outlier_indices]
+    row_mean_outlier = [row_mean[i] for i in outlier_indices]
+    col_mean_outlier = [col_mean[i] for i in outlier_indices]
+
+    # Create a new figure/axes if no axis is provided
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 6))
+
+    # Plot error bars for inlier points using the provided axis
+    ax.errorbar(
+        ELO_inlier,
+        col_mean_inlier,
+        fmt='ro',
+        markersize=2,
+        yerr=[
+            [cm - cl for cm, cl in zip(col_mean_inlier, col_low_inlier)],
+            [ch - cm for ch, cm in zip(col_high_inlier, col_mean_inlier)]
+        ],
+        xerr=[xerr_neg_inlier, xerr_pos_inlier],
+        label=collabel
+    )
+    ax.errorbar(
+        ELO_inlier,
+        row_mean_inlier,
+        fmt='bo',
+        markersize=2,
+        yerr=[
+            [rm - rl for rm, rl in zip(row_mean_inlier, row_low_inlier)],
+            [rh - rm for rh, rm in zip(row_high_inlier, row_mean_inlier)]
+        ],
+        xerr=[xerr_neg_inlier, xerr_pos_inlier],
+        label=rowlabel
+    )
+
+    # Plot outliers as scatter points so they are still visible on the plot
+    if outlier_indices:
+        ax.scatter(ELO_outlier, col_mean_outlier, c='r', marker='s',
+                   label=f"{collabel} Outlier", zorder=5)
+        ax.scatter(ELO_outlier, row_mean_outlier, c='b', marker='s', 
+                   label=f"{rowlabel} Outlier", zorder=5)
+
+    # Fit and plot for col_mean using the inlier data
+    result = fit_four_models_and_select(ELO_inlier, col_mean_inlier, col_low_inlier, col_high_inlier)
+    print("COL MEAN Best Model Name:", result["best_model_name"])
+    print("COL MEAN Best-Fit Parameters:", result["best_params"])
+    for m_name, info in result["all_results"].items():
+        print(f"  {m_name:>18s}  AIC={info['AIC']:.2f},  SSR={info['SSR']:.2f}")
+
+    x_eval = np.linspace(min(ELO_inlier), max(ELO_inlier), 100)
+    y_eval = result["best_func"](x_eval, *result["best_params"])
+    ax.plot(x_eval, y_eval, 'r-')
+
+    # Fit and plot for row_mean using the inlier data
+    result = fit_four_models_and_select(ELO_inlier, row_mean_inlier, row_low_inlier, row_high_inlier)
+    print("ROW MEAN Best Model Name:", result["best_model_name"])
+    print("ROW MEAN Best-Fit Parameters:", result["best_params"])
+    for m_name, info in result["all_results"].items():
+        print(f"  {m_name:>18s}  AIC={info['AIC']:.2f},  SSR={info['SSR']:.2f}")
+
+    x_eval = np.linspace(min(ELO_inlier), max(ELO_inlier), 100)
+    y_eval = result["best_func"](x_eval, *result["best_params"])
+    ax.plot(x_eval, y_eval, 'b-')
+    
+    # Dynamic axis limits based on your data
+    x_min = min(ELO_LIST) - 50
+    x_max = max(ELO_LIST) + 50
+
+    # Option 2: Focus on mean values (RECOMMENDED for your data)
+    all_y_values = list(row_mean) + list(col_mean)
+    y_min = min(all_y_values) - 300
+    y_max = max(all_y_values) + 300
+    
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    
+    ax.locator_params(axis='x', nbins=5)
+    ax.locator_params(axis='y', nbins=6)
+
+    ax.set_xlabel("General Elo")
+    ax.set_ylabel("Domain Elo") 
+    ax.set_title(f"{gamename}")
+
+    # Save the figure using the axis's parent figure
+    d = get_thisfile_dir()
+    os.makedirs(f'{d}/figures/', exist_ok=True)
+    ax.figure.savefig(f'{d}/figures/{gamename}_elo_B.pdf', bbox_inches='tight')
+    ax.figure.savefig(f'{d}/figures/{gamename}_elo_B.png', bbox_inches='tight', dpi=300)
+
+    # Only show if we're not already in a subplot framework
+    if ax is None:
+        plt.show()
+
 
 # %%
 def plot_win_matrix(WIN_RATE_MATRIX, rowlabel = 'O', collabel = 'X', gamename = 'tictactoe', models_to_ignore = []):
